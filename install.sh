@@ -55,7 +55,7 @@ command -v bun >/dev/null ||
 
 GITHUB=${GITHUB-"https://github.com"}
 
-github_repo="$GITHUB/di-sukharev/ai-tdd"
+github_repo="$GITHUB/etienneleba/ai-tdd"
 
 exe_name=aitdd
 
