@@ -15,7 +15,7 @@ export enum CONFIG_KEYS {
   LANGUAGE = "LANGUAGE",
 }
 
-export const DEFAULT_MODEL = "gpt-4-1106-preview";
+export const DEFAULT_MODEL = "gpt-4o";
 export const DEFAULT_MODEL_TOKEN_LIMIT = 100_000;
 
 enum CONFIG_COMMAND_MODES {
@@ -72,12 +72,17 @@ export const configValidators = {
       CONFIG_KEYS.MODEL,
       [
         DEFAULT_MODEL,
+        "gpt-4o",
+        "gpt-4o-mini",
+        "o1-preview",
+        "o1-mini",
+        "gpt-4-turbo",
         "gpt-4",
         "gpt-3.5-turbo",
         "gpt-3.5-turbo-16k",
         "gpt-3.5-turbo-0613",
       ].includes(value),
-      `${value} is not supported yet, 'gpt-4-1106-preview' (default), 'gpt-4', or 'gpt-3.5-turbo'`
+      `${value} is not supported yet 1, 'gpt-4-1106-preview' (default), 'gpt-4', or 'gpt-3.5-turbo'`
     );
 
     return value;
