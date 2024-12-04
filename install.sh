@@ -85,8 +85,8 @@ curl --fail --location --progress-bar --output "$exe.zip" "$aitdd_uri" ||
 unzip -oqd "$bin_dir" "$exe.zip" ||
     error 'Failed to extract aitdd'
 
-mv "$bin_dir/aitdd-$target/$exe_name.js" "$exe.js" ||
-    error 'Failed to move extracted aitdd to destination'
+#mv "$bin_dir/$exe_name.js" "$exe.js" ||
+#    error 'Failed to move extracted aitdd to destination'
 
 cat <<EOF >"$exe"
 #!/usr/bin/env bash
@@ -98,7 +98,7 @@ EOF
 chmod +x "$exe" ||
     error 'Failed to set permissions on aitdd executable'
 
-rm -r "$bin_dir/aitdd-$target" "$exe.zip"
+#rm -r "$bin_dir/aitdd-$target" "$exe.zip"
 
 tildify() {
     if [[ $1 = $HOME/* ]]; then

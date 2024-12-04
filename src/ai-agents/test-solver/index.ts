@@ -7,16 +7,35 @@ import { FUNCTIONS } from "./functions";
 
 interface Props {
   testFile: FileWithCode;
-  relevantFiles?: FileWithCode[];
+  fileTree: string[];
   error: string;
   context?: Array<OpenAI.Chat.ChatCompletionMessageParam>;
 }
 
 class TestSolverAgent {
+  async callOpenAi({ testFile, fileTree, error, context = [] }: Props) {
+    const prompt = this.getChatCompletionPrompt(testFile, error, fileTree);
+
+    const chat = [...prompt, ...context];
+
+    const message = await OpenAiApi.createChatCompletion(chat, [
+      {
+        type: "function",
+        function: FUNCTIONS.WRITE_CODE,
+      },
+      {
+        type: "function",
+        function: FUNCTIONS.VIEW
+      }
+    ]);
+
+    return message;
+  }
+
   private getChatCompletionPrompt(
-    test: FileWithCode,
-    error: string,
-    files: FileWithCode[] = []
+      test: FileWithCode,
+      error: string,
+      fileTree: string[]
   ): Array<OpenAI.Chat.ChatCompletionMessageParam> {
     return [
       {
@@ -24,7 +43,7 @@ class TestSolverAgent {
         content: [
           "You are autoregressive language model that has been fine-tuned with instruction-tuning and RLHF, each token you produce is another opportunity to use computation, therefore you always spend a few sentences explaining background context, assumptions, and step-by-step thinking BEFORE you try to respond.",
           "You are to act as an AI agent that solves tests in REPL mode as per the Test-Driven Development (TDD) practices.",
-          "I send you a test suite code, then you recognize the tech stack and generate production ready code to pass all the tests.",
+          "I send you a test suite code, it's PHP with the framework Symfony using hexagonal architecture, and you generate production ready code to pass all the tests.",
           "Adhere strictly to Test-Driven Development (TDD) practices, ensuring that all code written is robust, efficient, and passes the tests.",
         ].join("\n"),
       },
@@ -32,7 +51,7 @@ class TestSolverAgent {
         role: "user",
         content: [
           `Below is the '${test.path}' content:`,
-          "```",
+          "```php",
           test.code,
           "```",
           "",
@@ -41,12 +60,9 @@ class TestSolverAgent {
           error,
           "```",
           "",
-          ...files.map((file) => [
-            `This is the '${file.path}' content:`,
-            "```",
-            file.code,
-            "```",
-            "",
+          "The path of all the files you can view :",
+          ...fileTree.map((path) => [
+            `${path}\n`
           ]),
           "",
           "Make the tests pass.",
@@ -55,36 +71,9 @@ class TestSolverAgent {
     ];
   }
 
-  async callOpenAi({ testFile, relevantFiles, error, context = [] }: Props) {
-    const prompt = this.getChatCompletionPrompt(testFile, error, relevantFiles);
-
-    const chat = [...prompt, ...context];
-
-    const message = await OpenAiApi.createChatCompletion(chat, [
-      {
-        type: "function",
-        function: FUNCTIONS.AWK,
-      },
-      {
-        type: "function",
-        function: FUNCTIONS.GREP,
-      },
-      {
-        type: "function",
-        function: FUNCTIONS.FIND,
-      },
-      {
-        type: "function",
-        function: FUNCTIONS.WRITE_CODE,
-      },
-    ]);
-
-    return message;
-  }
-
   async solve({
     testFile,
-    relevantFiles = [],
+    fileTree = [],
     error,
     context = [],
   }: Props): Promise<OpenAI.Chat.Completions.ChatCompletionMessage> {
@@ -94,7 +83,7 @@ class TestSolverAgent {
       loader.start("GPT is solving the test");
       const message = await this.callOpenAi({
         testFile,
-        relevantFiles,
+        fileTree: fileTree,
         error,
         context,
       });
