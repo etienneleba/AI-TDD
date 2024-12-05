@@ -75,8 +75,8 @@ class TestFinderService {
   private async findTestFileByPath() {
     const testFilePath = await text({
       message: "Provide a test file path:",
-      placeholder: "__tests__/path/to/your.test.file",
-      initialValue: "__tests__/examples/crud/get.test.ts",
+      placeholder: "./tests/functional/AddProductToBasketTest.php",
+      initialValue: "./tests/functional/",
       validate(value) {
         if (value.length === 0) return `Path is required`;
       },

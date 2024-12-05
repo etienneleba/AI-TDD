@@ -14,15 +14,21 @@ import { COMMANDS } from "./enums";
 export const runCommand = command(
   {
     name: COMMANDS.run,
-    // parameters: ["<mode>", "<key=values...>"],
+    parameters: ["[testFilePath]"],
   },
   async (argv) => {
     intro("aitdd is spinning 🪩");
 
+    let testFilePath = argv._.testFilePath;
+    let testFilePathError: null;
+
+    if(testFilePath == undefined) {
+      [testFilePath, testFilePathError] = await call(testFinder.find());
+    }
     // TODO: check latest version
     // TODO: check is initialized
 
-    const [testFilePath, testFilePathError] = await call(testFinder.find());
+
 
     if (testFilePathError) {
       outroError("Test file not found");
@@ -48,7 +54,6 @@ export const runCommand = command(
 
         if (message.content)
           console.info(message.content); // todo: stream tokens to stdout
-        else note("No content in message");
 
         context.push(message);
 

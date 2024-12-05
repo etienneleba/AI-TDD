@@ -33,7 +33,7 @@ async function createChatCompletion(
     messages,
     tools,
     temperature: 0.7,
-    top_p: 0.1,
+    top_p: 0.1
     // max_tokens: DEFAULT_MODEL_TOKEN_LIMIT,
   };
 

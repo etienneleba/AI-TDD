@@ -3,9 +3,16 @@
 import { readdirSync, statSync, mkdirSync } from 'fs';
 import { join } from 'path';
 
+
+interface IContent {
+    rowNumber: number;
+    action: "replace" | "append" | "prepend" | "delete";
+    with: string;
+}
+
 interface FileToManipulate {
     filePath: string;
-    content: string;
+    content: IContent[];
 }
 
 class FileManipulator {
@@ -54,7 +61,7 @@ class FileManipulator {
 
                 if (!directory) throw error;
 
-                mkdirSync(directory);
+                await mkdirSync(directory);
                 await this.createFile(filePath, content);
             }
         }
@@ -76,22 +83,82 @@ class FileManipulator {
         return text;
     }
 
-    async writeFileContent(filePath: string, content: string) {
-        const currentContent = await this.readFileContent(filePath);
-
-        try {
-            if (!currentContent) {
-                await this.createFile(filePath, content);
-            } else {
-
-                await this.writeFile(filePath, content);
-
-                return `${filePath}: success`;
+    // TODO: make this async write in place for better performance
+    manipulateFileContent(currentContent: string, newContent: IContent) {
+        const lines = currentContent.split("\n");
+        const newLines: string[] = [];
+        let currentRowNumber = 1;
+        for (const line of lines) {
+            if (currentRowNumber != newContent.rowNumber) {
+                newLines.push(line);
+                currentRowNumber++;
+                continue;
             }
-        } catch (error) {
-            return `${filePath}: ${error}`;
+
+            if (newContent.action === "replace") {
+                newLines.push(newContent.with);
+            } else if (newContent.action === "delete") {
+
+            } else if (newContent.action === "append") {
+                newLines.push(line);
+                newLines.push(newContent.with);
+            } else if (newContent.action === "prepend") {
+                newLines.push(newContent.with);
+                newLines.push(line);
+            } else {
+                throw new Error("UNKNOWN_CONTENT_ACTION");
+            }
+            currentRowNumber++;
+        }
+        if(currentRowNumber <= newContent.rowNumber) {
+            for(currentRowNumber; currentRowNumber <= newContent.rowNumber; currentRowNumber++) {
+
+                if (currentRowNumber != newContent.rowNumber) {
+                    newLines.push("");
+                    continue;
+                }
+
+                if (newContent.action === "replace") {
+                    newLines.push(newContent.with);
+                } else if (newContent.action === "delete") {
+
+                } else if (newContent.action === "append") {
+                    newLines.push("");
+                    newLines.push(newContent.with);
+                } else if (newContent.action === "prepend") {
+                    newLines.push(newContent.with);
+                } else {
+                    throw new Error("UNKNOWN_CONTENT_ACTION");
+                }
+            }
         }
 
+        return newLines.join("\n");
+    }
+
+    async writeFileContent(filePath: string, modifications: IContent[]) {
+        let currentContent = await this.readFileContent(filePath);
+
+        for (const modification of modifications) {
+            try {
+                if (!currentContent) {
+                    await this.createFile(filePath, modification.with);
+                } else {
+                    const contentToWrite = this.manipulateFileContent(
+                        currentContent,
+                        modification
+                    );
+
+                    currentContent = contentToWrite;
+
+                    await this.writeFile(filePath, contentToWrite);
+                }
+            } catch (error) {
+                return `${filePath}: ${error}`;
+            }
+
+        }
+        return `${filePath}: success`;
     }
 
     async manage(files: FileToManipulate[]) {

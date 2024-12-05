@@ -40,7 +40,7 @@ class TestRunnerService {
       testFilePath,
     ]);
 
-    if (stderr) note(stderr);
+    if (stderr) console.error("The tests didn't pass");
 
     return {
       message: this.getMessage(stdout || stderr),
